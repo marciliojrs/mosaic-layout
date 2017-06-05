@@ -11,6 +11,7 @@ import UIKit
 public enum TRMosaicCellType {
     case big
     case small
+    case full
 }
 
 public protocol TRMosaicLayoutDelegate {
@@ -124,7 +125,6 @@ open class TRMosaicLayout: UICollectionViewLayout {
      */
     override open var collectionViewContentSize: CGSize {
         get {
-            
             let height = columns.smallestColumn.columnHeight
             return CGSize(width: contentWidth, height: height)
         }
@@ -147,9 +147,7 @@ open class TRMosaicLayout: UICollectionViewLayout {
      Returns all layout attributes for the current indexPath
      */
     override open func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-        
         return self.cachedCellLayoutAttributes[indexPath]
-
     }
     
     // MARK: Layout
@@ -230,32 +228,44 @@ open class TRMosaicLayout: UICollectionViewLayout {
     
     /**
      Calculates height for the given cell type
-     
+
      - parameter cellType: Cell type
-     
+
      - returns: Calculated height
      */
-    func cellContentHeightFor(mosaicCellType cellType:TRMosaicCellType) -> CGFloat {
+    func cellContentHeightFor(mosaicCellType cellType:TRMosaicCellType) -> CGFloat {        
+        guard collectionView!.numberOfItems(inSection: 0) > 2 else { return collectionView!.bounds.height }
+
         let height = delegate.heightForSmallMosaicCell()
         if cellType == .big {
             return height * 2
         }
         return height
     }
-    
+
     /**
      Calculates width for the given cell type
-     
+
      - parameter cellType: Cell type
-     
+
      - returns: Calculated width
      */
     func cellContentWidthFor(mosaicCellType cellType:TRMosaicCellType) -> CGFloat {
-        let width = contentWidth / 3
-        if cellType == .big {
-            return width * 2
+        switch collectionView!.numberOfItems(inSection: 0) {
+        case 1: return contentWidth
+        case 2:
+            let width = contentWidth / CGFloat(2)
+            if cellType == .big {
+                return width * 2
+            }
+            return width
+        default:
+            let width = contentWidth / CGFloat(numberOfColumnsInSection)
+            if cellType == .big {
+                return width * 2
+            }
+            return width
         }
-        return width
     }
     
     // MARK: Orientation
